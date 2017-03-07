@@ -1,2 +1,2 @@
-# opencot-server
+# OpenCoT
 The main runtime backend.
