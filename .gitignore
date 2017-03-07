@@ -1,3 +1,9 @@
+*.class
+
+# Build outputs
 /bin/
 /build/
 /dist/
+
+# Netbeans
+/nbproject/private/
