@@ -18,13 +18,18 @@
 
 package com.github.opencot;
 
-public class Server {
+import com.github.opencot.data.protocols.MqttGateway;
+
+public class Main {
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+    	
+    	MqttGateway mqtt = new MqttGateway();
+    	mqtt.Init();
+    	mqtt.Run();
     }
     
 }
