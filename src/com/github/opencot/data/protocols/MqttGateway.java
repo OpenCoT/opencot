@@ -50,7 +50,10 @@ public class MqttGateway implements Gateway {
 			e.printStackTrace();
 		}
     	// Subscribe to topics
-    	Topic[] topics = {new Topic("example", QoS.AT_LEAST_ONCE)};
+    	Topic[] topics = {
+    			//new Topic("led/tick", QoS.AT_LEAST_ONCE),
+    			new Topic("sensor/LightIntensity/x", QoS.AT_LEAST_ONCE),
+    			};
     	try {
 			byte[] qoses = connection.subscribe(topics);
 		} catch (Exception e) {
@@ -65,7 +68,13 @@ public class MqttGateway implements Gateway {
 				message = connection.receive();
 	    		byte[] payload = message.getPayload();
 	    		String msg = new String(payload);
-	    		System.out.printf("Received @ \"%s\": \"%s\"", message.getTopic(), msg );
+	    		System.out.printf("Received @ \"%s\": \"%s\"\n", message.getTopic(), msg );
+	    		
+	    		// TODO parse only correct topics
+	    		//if(  ) {
+	    			Integer pwm = (int) (Float.parseFloat(msg)/1000.0*255);
+	    			connection.publish("led/g", pwm.toString().getBytes(), QoS.AT_LEAST_ONCE, false);
+	    		//}
 	    		
 	    		message.ack();
 			} catch (Exception e) {
