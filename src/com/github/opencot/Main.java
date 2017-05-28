@@ -25,19 +25,20 @@ import web.websocket.DeviceSessionHandler;
 import java.net.URISyntaxException;
 import java.net.URI;
 import com.github.opencot.io.protocols.MqttGateway;
+import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.websocket.*;
-@ClientEndpoint
+
 public class Main {
 
     /**
      * @param args the command line arguments
      */
     
-    public static void main(String[] args) throws URISyntaxException {
+    public static void main(String[] args) throws URISyntaxException, DeploymentException, IOException {
     	
         
         List<Device> devices = new LinkedList<>();
@@ -55,33 +56,19 @@ public class Main {
     	devices.add(dev3);
         
         
+       
+        Client client = new Client();
+        String message="";
         
-        
-         WebSocketContainer container=null;//
-     Session session=null;
-  try{
-   //Tyrus is plugged via ServiceLoader API. See notes above
-   container = ContainerProvider.getWebSocketContainer(); 
-//WS1 is the context-root of my web.app 
-//ratesrv is the  path given in the ServerEndPoint annotation on server implementation
-    session=container.connectToServer(Main.class, URI.create("ws://localhost:8080/WebHome/actions")); 
-
-
-   } catch (Exception e) {
-   e.printStackTrace();
-  }
-  finally{
-   if(session!=null){
-    try {
- session.close();
-    } catch (Exception e) {     
-     e.printStackTrace();
-    }
-   }         
-  } 
-                
-    	
-    	
+        client.sendMessage(message);
+      DeviceData DeviceAction ={
+        action: "add",
+        name: name,
+        type: type,
+        description: description
+    };
+    client.sendMessage(JSON.toString(DeviceAction));
+                  	
     	//MqttGateway mqtt = new MqttGateway();
     	//mqtt.Init();
     	//mqtt.Run();
