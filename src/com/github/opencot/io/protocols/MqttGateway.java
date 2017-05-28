@@ -1,5 +1,8 @@
 package com.github.opencot.io.protocols;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.LinkedList;
 import java.net.URISyntaxException;
 
 import org.fusesource.mqtt.client.BlockingConnection;
@@ -8,6 +11,7 @@ import org.fusesource.mqtt.client.Message;
 import org.fusesource.mqtt.client.QoS;
 import org.fusesource.mqtt.client.Topic;
 
+import com.github.opencot.data.DeviceData;
 import com.github.opencot.io.Gateway;
 import com.github.opencot.io.GatewayState;
 
@@ -15,23 +19,24 @@ public class MqttGateway implements Gateway {
 	
 	public GatewayState state = GatewayState.STATE_DISABLED;
 	
-	protected MQTT mqttclient;
+	protected MQTT mqtt;
 	protected BlockingConnection connection;
-	//protected
+	protected HashMap<String,List<DeviceData>> subscriptions;
 	
 	public MqttGateway() {
 		state = GatewayState.STATE_INVALID;
+		subscriptions = new HashMap<>();
 	}
 	
 	@Override
 	public int Init()
 	{
-		mqttclient = new MQTT();
+		mqtt = new MQTT();
     	try {
-    		mqttclient.setHost("localhost", 1883);
-    		mqttclient.setClientId("Opencot");
-    		mqttclient.setUserName("admin");
-    		mqttclient.setPassword("admin");
+    		mqtt.setHost("localhost", 1883);
+    		mqtt.setClientId("OpenCoT");
+    		mqtt.setUserName("admin");
+    		mqtt.setPassword("admin");
 		} catch (URISyntaxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -43,9 +48,9 @@ public class MqttGateway implements Gateway {
 	}
 
 	@Override
-	public int Run() {
+	public int Start() {
     	// Connect to a broker(server)
-    	BlockingConnection connection = mqttclient.blockingConnection();
+    	BlockingConnection connection = mqtt.blockingConnection();
     	try {
 			connection.connect();
 			connection.publish("example", "Hello".getBytes(), QoS.AT_LEAST_ONCE, false);
@@ -57,6 +62,7 @@ public class MqttGateway implements Gateway {
     	Topic[] topics = {
     			//new Topic("led/tick", QoS.AT_LEAST_ONCE),
     			new Topic("sensor/LightIntensity/x", QoS.AT_LEAST_ONCE),
+    			// TODO foreach sub : subscriptions do topics.add( new Topic(addr) )
     			};
     	try {
 			byte[] qoses = connection.subscribe(topics);
@@ -104,5 +110,37 @@ public class MqttGateway implements Gateway {
 			}
 		}
 		return 0;
+	}
+	
+	public boolean addSubscription(String addr) {
+		//mqttclient.
+		return true;
+	}
+	protected boolean subscribe( String topic ) { // called while running
+		if( state != GatewayState.STATE_ACTIVE )
+			return false;
+		//connection.subscribe();
+		return false;
+	}
+
+	@Override
+	public void addReceiver(DeviceData devdata) {
+		String addr = devdata.getAddress();
+		List<DeviceData> subs;
+		
+		if( subscriptions.containsKey(addr) ) {
+			subs = subscriptions.get(addr);
+		} else {
+			subs = new LinkedList<>();
+			subscriptions.put(addr, subs);
+			subscribe( addr );
+		}
+		subs.add(devdata);
+	}
+	@Override
+	public void sendData(DeviceData devdata) {
+		if( state != GatewayState.STATE_ACTIVE )
+			return; // TODO invalid state, error out?
+		// TODO //
 	}
 }

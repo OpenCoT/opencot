@@ -21,31 +21,40 @@ package com.github.opencot;
 import java.util.LinkedList;
 import java.util.List;
 
-//import com.github.opencot.io.protocols.MqttGateway;
+import com.github.opencot.data.DataDirection;
+import com.github.opencot.data.DataType;
+import com.github.opencot.data.DeviceData;
+import com.github.opencot.io.protocols.MqttGateway;
 
 public class Main {
 
+	static List<Device> devices;
+	static List<Scenario> scenarios;
+	
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+
+    	MqttGateway mqtt = new MqttGateway();
+    	mqtt.Init();
     	
-    	List<Device> devices = new LinkedList<>();
+    	devices = new LinkedList<>();
+    	scenarios = new LinkedList<>();
+    	
     	// TODO: Deserialize devices from storage
-    	Device dev1 = new Device(1, "TestDev1", "Test1");
-    	Device dev2 = new Device(2, "TestDev2", "Test2");
-    	Device dev3 = new Device(3, "TestDev3", "Test3");
-    	dev1.addData(new DeviceData("Data1_val", "/test/1", DevDataType.Value, DevDataDir.IN));
-    	dev1.addData(new DeviceData("Data2_str", "/test/2", DevDataType.String, DevDataDir.IN));
-    	dev2.addData(new DeviceData("Data3_tgl", "/test/3", DevDataType.Toggle, DevDataDir.IN));
-    	dev3.addData(new DeviceData("Data4_event", "/test/4", DevDataType.Event, DevDataDir.IN));
+    	Device dev1 = new Device(1, "TestDev1", "Test1", mqtt);
+    	Device dev2 = new Device(2, "TestDev2", "Test2", mqtt);
+    	Device dev3 = new Device(3, "TestDev3", "Test3", mqtt);
+    	dev1.addDataEndpoint(new DeviceData(dev1, "Data1_val", DataType.Value, DataDirection.IN, "/test/1"));
+    	dev1.addDataEndpoint(new DeviceData(dev1, "Data2_str", DataType.String, DataDirection.IN, "/test/2"));
+    	dev2.addDataEndpoint(new DeviceData(dev2, "Data3_tgl", DataType.Toggle, DataDirection.IN, "/test/3"));
+    	dev3.addDataEndpoint(new DeviceData(dev3, "Data4_event", DataType.Event, DataDirection.IN, "/test/4"));
     	devices.add(dev1);
     	devices.add(dev2);
     	devices.add(dev3);
-    	
-    	//MqttGateway mqtt = new MqttGateway();
-    	//mqtt.Init();
-    	//mqtt.Run();
+
+    	//mqtt.Start();
     }
     
 }

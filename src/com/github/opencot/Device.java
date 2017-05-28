@@ -3,14 +3,26 @@ package com.github.opencot;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Device {
+import com.github.opencot.data.DataContainer;
+import com.github.opencot.data.DataDirection;
+import com.github.opencot.data.DataExchanger;
+import com.github.opencot.data.DeviceData;
+import com.github.opencot.io.Gateway;
+
+/**
+ * Class representing physical or logical device that is
+ * connected to the outside world.
+ */
+public class Device implements DataExchanger {
+	private Gateway gateway;
 	protected boolean valid;
 	protected int uid;
 	protected String name;
 	protected String descr;
 	protected List<DeviceData> dataentries;
 
-	public Device(int uid, String name, String description) {
+	public Device(int uid, String name, String description, Gateway gateway) {
+		this.gateway = gateway;
 		this.uid = uid;
 		this.name = name;
 		descr = description;
@@ -43,19 +55,28 @@ public class Device {
 		descr = description;
 	}
 	
-	public void addData(DeviceData newdata) {
-		dataentries.add(newdata);
+	public void addDataEndpoint(DeviceData dataendpoint) {
+		dataentries.add(dataendpoint);
+		// Link it to the outside world
+		if( dataendpoint.getDirection() == DataDirection.IN || dataendpoint.getDirection() == DataDirection.INOUT ) {
+			gateway.addReceiver(dataendpoint);
+		}
 	}
-	/**
-	 * Returns data object by the entry name
-	 * @param dataname Name of data entry
-	 * @return data object if found, null otherwise
-	 */
-	public DeviceData getData( String dataname ) {
-		for (DeviceData dd : dataentries) {
+	@Override
+	public DataContainer getDataEndpoint( String dataname ) {
+		for (DataContainer dd : dataentries) {
 			if (dd.getName().equalsIgnoreCase(dataname))
 				return dd;
 		}
 		return null;
+	}
+
+	@Override
+	public boolean isExternal() {
+		return true;
+	}
+	@Override
+	public Gateway getGateway() {
+		return gateway;
 	}
 }
