@@ -8,11 +8,13 @@ public class DeviceData {
 	private Number value;
 	//private Number toggletreshold;
 	private int eventCount;
+	private DevDataDir datadir;
 	
-	public DeviceData( String name, String addr, DevDataType type) {
+	public DeviceData( String name, String addr, DevDataType type, DevDataDir direction) {
 		dataname = name;
 		address = addr;
 		datatype = type;
+		datadir = direction;
 		eventCount = 0;
 		value = 0;
 		//stringval = "";
@@ -26,6 +28,9 @@ public class DeviceData {
 	}
 	public DevDataType getType() {
 		return datatype;
+	}
+	public DevDataDir getDirection() {
+		return datadir;
 	}
 	
 	public String getStringValue() {

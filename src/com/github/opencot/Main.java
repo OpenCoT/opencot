@@ -21,7 +21,7 @@ package com.github.opencot;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.github.opencot.io.protocols.MqttGateway;
+//import com.github.opencot.io.protocols.MqttGateway;
 
 public class Main {
 
@@ -35,10 +35,10 @@ public class Main {
     	Device dev1 = new Device(1, "TestDev1", "Test1");
     	Device dev2 = new Device(2, "TestDev2", "Test2");
     	Device dev3 = new Device(3, "TestDev3", "Test3");
-    	dev1.addData(new DeviceData("Data1_val", "/test/1", DevDataType.Value));
-    	dev1.addData(new DeviceData("Data2_str", "/test/2", DevDataType.String));
-    	dev2.addData(new DeviceData("Data3_tgl", "/test/3", DevDataType.Toggle));
-    	dev3.addData(new DeviceData("Data4_event", "/test/4", DevDataType.Event));
+    	dev1.addData(new DeviceData("Data1_val", "/test/1", DevDataType.Value, DevDataDir.IN));
+    	dev1.addData(new DeviceData("Data2_str", "/test/2", DevDataType.String, DevDataDir.IN));
+    	dev2.addData(new DeviceData("Data3_tgl", "/test/3", DevDataType.Toggle, DevDataDir.IN));
+    	dev3.addData(new DeviceData("Data4_event", "/test/4", DevDataType.Event, DevDataDir.IN));
     	devices.add(dev1);
     	devices.add(dev2);
     	devices.add(dev3);

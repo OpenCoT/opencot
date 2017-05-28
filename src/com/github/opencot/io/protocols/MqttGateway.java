@@ -17,6 +17,7 @@ public class MqttGateway implements Gateway {
 	
 	protected MQTT mqttclient;
 	protected BlockingConnection connection;
+	//protected
 	
 	public MqttGateway() {
 		state = GatewayState.STATE_INVALID;
