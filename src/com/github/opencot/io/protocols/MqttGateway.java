@@ -1,4 +1,4 @@
-package com.github.opencot.data.protocols;
+package com.github.opencot.io.protocols;
 
 import java.net.URISyntaxException;
 
@@ -8,11 +8,14 @@ import org.fusesource.mqtt.client.Message;
 import org.fusesource.mqtt.client.QoS;
 import org.fusesource.mqtt.client.Topic;
 
+import com.github.opencot.io.Gateway;
+import com.github.opencot.io.GatewayState;
+
 public class MqttGateway implements Gateway {
 	
 	public GatewayState state = GatewayState.STATE_DISABLED;
 	
-	protected MQTT client;
+	protected MQTT mqttclient;
 	protected BlockingConnection connection;
 	
 	public MqttGateway() {
@@ -22,12 +25,12 @@ public class MqttGateway implements Gateway {
 	@Override
 	public int Init()
 	{
-		client = new MQTT();
+		mqttclient = new MQTT();
     	try {
-    		client.setHost("localhost", 1883);
-    		client.setClientId("Opencot");
-    		client.setUserName("admin");
-    		client.setPassword("admin");
+    		mqttclient.setHost("localhost", 1883);
+    		mqttclient.setClientId("Opencot");
+    		mqttclient.setUserName("admin");
+    		mqttclient.setPassword("admin");
 		} catch (URISyntaxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -41,7 +44,7 @@ public class MqttGateway implements Gateway {
 	@Override
 	public int Run() {
     	// Connect to a broker(server)
-    	BlockingConnection connection = client.blockingConnection();
+    	BlockingConnection connection = mqttclient.blockingConnection();
     	try {
 			connection.connect();
 			connection.publish("example", "Hello".getBytes(), QoS.AT_LEAST_ONCE, false);
