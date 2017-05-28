@@ -28,8 +28,15 @@ import com.github.opencot.io.protocols.MqttGateway;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonNumber;
 import javax.json.JsonObject;
+import javax.json.JsonString;
+import javax.json.JsonValue;
 import javax.websocket.*;
 
 public class Main {
@@ -40,6 +47,7 @@ public class Main {
     
     public static void main(String[] args) throws URISyntaxException, DeploymentException, IOException {
     	
+        
         
         List<Device> devices = new LinkedList<>();
     	// TODO: Deserialize devices from storage
@@ -60,8 +68,10 @@ public class Main {
         Client client = new Client();
         String message="";
         
-        client.sendMessage(message);
-      DeviceData DeviceAction ={
+     
+     client.sendMessage(message);
+        json.
+       json ={
         action: "add",
         name: name,
         type: type,
