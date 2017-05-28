@@ -1,55 +1,30 @@
-
 package com.github.opencot;
+import static com.sun.xml.internal.ws.dump.LoggingDumpTube.Position.Before;
 
-/**
- *
- * @author martynas
- */
-import java.io.*;
-import java.net.*;
+import java.util.LinkedList;
+import java.util.List;
+import web.model.Device;
+import web.websocket.DeviceSessionHandler;
+import java.net.URISyntaxException;
+import java.net.URI;
+import com.github.opencot.io.protocols.MqttGateway;
+import java.io.StringReader;
+import java.net.URI;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.websocket.*;
 
-// Kolkas nieko nedaro
-public class Client {
-    public static void main(String[] args) throws IOException {
-        
-        if (args.length != 2) {
-            System.err.println(
-                "Usage: java EchoClient <host name> <port number>");
-            System.exit(1);
-        }
 
-        String hostName = args[0];
-        int portNumber = Integer.parseInt(args[1]);
+@ClientEndpoint
+public class Client{
 
-        try (
-            Socket kkSocket = new Socket(hostName, portNumber);
-            PrintWriter out = new PrintWriter(kkSocket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(
-                new InputStreamReader(kkSocket.getInputStream()));
-        ) {
-            BufferedReader stdIn =
-                new BufferedReader(new InputStreamReader(System.in));
-            String fromServer;
-            String fromUser;
-
-            while ((fromServer = in.readLine()) != null) {
-                System.out.println("Server: " + fromServer);
-                if (fromServer.equals("Bye."))
-                    break;
-                
-                fromUser = stdIn.readLine();
-                if (fromUser != null) {
-                    System.out.println("Client: " + fromUser);
-                    out.println(fromUser);
-                }
-            }
-        } catch (UnknownHostException e) {
-            System.err.println("Don't know about host " + hostName);
-            System.exit(1);
-        } catch (IOException e) {
-            System.err.println("Couldn't get I/O for the connection to " +
-                hostName);
-            System.exit(1);
-        }
+    private WebSocketContainer container;
+    
+    public void onInit(){
+           this.container = ContainerProvider.getWebSocketContainer();
+    }
+    
+    public void testConnection(){
+     
     }
 }
