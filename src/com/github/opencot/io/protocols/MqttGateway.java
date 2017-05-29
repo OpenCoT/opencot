@@ -5,12 +5,19 @@ import java.util.List;
 import java.util.LinkedList;
 import java.net.URISyntaxException;
 
-import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
-import org.fusesource.mqtt.client.Message;
-import org.fusesource.mqtt.client.QoS;
+import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtbuf.UTF8Buffer;
+import org.fusesource.mqtt.client.Callback;
+import org.fusesource.mqtt.client.CallbackConnection ;
+import org.fusesource.mqtt.client.Listener;
 import org.fusesource.mqtt.client.Topic;
+import org.fusesource.mqtt.client.Tracer;
+import org.fusesource.mqtt.codec.MQTTFrame;
+import org.fusesource.mqtt.client.Promise;
+import org.fusesource.mqtt.client.QoS;
 
+import com.github.opencot.data.DataContainer;
 import com.github.opencot.data.DeviceData;
 import com.github.opencot.io.Gateway;
 import com.github.opencot.io.GatewayState;
@@ -20,29 +27,94 @@ public class MqttGateway implements Gateway {
 	public GatewayState state = GatewayState.STATE_DISABLED;
 	
 	protected MQTT mqtt;
-	protected BlockingConnection connection;
+	protected CallbackConnection connection;
 	protected HashMap<String,List<DeviceData>> subscriptions;
+    final Promise<Buffer> result = new Promise<Buffer>();
 	
 	public MqttGateway() {
 		state = GatewayState.STATE_INVALID;
 		subscriptions = new HashMap<>();
+		mqtt = new MQTT();
+    	try {
+    		mqtt.setHost("broker.mqttdashboard.com", 1883);
+    		mqtt.setClientId("OpenCoT");
+    		//mqtt.setUserName("admin");
+    		//mqtt.setPassword("admin");
+            mqtt.setTracer(new Tracer(){
+                @Override
+                public void onReceive(MQTTFrame frame) {
+                    System.out.println("MQTT recv: "+frame);
+                }
+
+                @Override
+                public void onSend(MQTTFrame frame) {
+                    System.out.println("MQTT send: "+frame);
+                }
+
+                @Override
+                public void debug(String message, Object... args) {
+                    //System.out.println(String.format("MQTT debug: "+message, args));
+                }
+            });
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+			state = GatewayState.STATE_ERROR;
+		}
 	}
 	
 	@Override
 	public int Init()
 	{
-		mqtt = new MQTT();
-    	try {
-    		mqtt.setHost("localhost", 1883);
-    		mqtt.setClientId("OpenCoT");
-    		mqtt.setUserName("admin");
-    		mqtt.setPassword("admin");
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			state = GatewayState.STATE_ERROR;
-			return -1;
-		}
+		connection = mqtt.callbackConnection();
+
+        connection.listener(new Listener() {
+            public void onConnected() {
+                System.out.println("MQTT connected");
+            }
+
+            public void onDisconnected() {
+                System.out.println("MQTT disconnected");
+            }
+
+            public void onPublish(UTF8Buffer topic, Buffer payload, Runnable onComplete) {
+                System.out.printf("MQTT onpublish @\"%s\" \"%s\"\n",topic,payload.utf8().toString());
+                if( subscriptions.containsKey(topic.toString()) ) {
+                	List<DeviceData> subs = subscriptions.get(topic.toString());
+					Number numvalue = null;
+                	for (DataContainer dat : subs) {
+						switch (dat.getType()) {
+						case String:
+							dat.setStringValue(payload.toString());
+							break;
+						case Value:
+						case Toggle:
+							if( numvalue == null ) {
+								try {
+									numvalue = (Float.parseFloat(payload.toString()));
+								} catch (NumberFormatException nfe) {
+									// Not a float
+					                System.out.printf("MQTT: Invalid value received for \"%s\": \"%s\"\n",
+					                		topic.toString(), payload.toString());
+					                continue;
+								}
+							}
+							dat.setValue(numvalue);
+							break;
+						case Event:
+							dat.invokeEvent();
+							break;
+						}
+					}
+                }
+                onComplete.run();
+            }
+
+            public void onFailure(Throwable value) {
+                System.out.println("MQTT failure: "+value);
+                connection.disconnect(null);
+            }
+        });
+		
     	state = GatewayState.STATE_INACTIVE;
     	return 0;
 	}
@@ -50,50 +122,41 @@ public class MqttGateway implements Gateway {
 	@Override
 	public int Start() {
     	// Connect to a broker(server)
-    	BlockingConnection connection = mqtt.blockingConnection();
-    	try {
-			connection.connect();
-			connection.publish("example", "Hello".getBytes(), QoS.AT_LEAST_ONCE, false);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	// Subscribe to topics
-    	Topic[] topics = {
-    			//new Topic("led/tick", QoS.AT_LEAST_ONCE),
-    			new Topic("sensor/LightIntensity/x", QoS.AT_LEAST_ONCE),
-    			// TODO foreach sub : subscriptions do topics.add( new Topic(addr) )
-    			};
-    	try {
-			byte[] qoses = connection.subscribe(topics);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	// (Blocking api way:) poll for received messages
-    	while(true)
-    	{
-    		Message message;
-			try {
-				message = connection.receive();
-	    		byte[] payload = message.getPayload();
-	    		String msg = new String(payload);
-	    		System.out.printf("Received @ \"%s\": \"%s\"\n", message.getTopic(), msg );
-	    		
-	    		// TODO parse only correct topics
-	    		//if(  ) {
-	    			Integer pwm = (int) (Float.parseFloat(msg)/1000.0*255);
-	    			connection.publish("led/g", pwm.toString().getBytes(), QoS.AT_LEAST_ONCE, false);
-	    		//}
-	    		
-	    		message.ack();
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				break;
-			}
-    	}
-		return 0;
+    	state = GatewayState.STATE_INACTIVE;
+        connection.connect(new Callback<Void>() {
+            public void onSuccess(Void v) {
+                System.out.println("Connect success");
+                Topic[] topics = new Topic[subscriptions.keySet().size()];
+                int i=0;
+                for (String addr : subscriptions.keySet()) {
+					topics[i] = new Topic(Buffer.utf8(addr), QoS.AT_LEAST_ONCE);
+                	i++;
+				}
+                connection.subscribe(topics, new Callback<byte[]>() {
+                    public void onSuccess(byte[] value) {
+            			state = GatewayState.STATE_ACTIVE;
+                        System.out.println("Subbed");
+                    }
+                    public void onFailure(Throwable value) {
+            			state = GatewayState.STATE_ERROR;
+                        System.out.println("Sub failed");
+                        result.onFailure(value);
+                        connection.disconnect(null);
+                    }
+                });
+
+            }
+
+            public void onFailure(Throwable value) {
+    			state = GatewayState.STATE_ERROR;
+                System.out.println("Connect failure: "+value);
+                result.onFailure(value);
+            }
+        });
+        
+        // FIXME make non-blocking
+        while(state == GatewayState.STATE_INACTIVE);
+        return (state == GatewayState.STATE_ACTIVE) ? 0 : 1;
 	}
 	
 	@Override
@@ -101,25 +164,15 @@ public class MqttGateway implements Gateway {
 	{
 		if( connection != null )
 		{
-	    	try {
-				connection.disconnect();
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return -1;
-			}
+			connection.disconnect(null);
 		}
 		return 0;
 	}
-	
-	public boolean addSubscription(String addr) {
-		//mqttclient.
-		return true;
-	}
-	protected boolean subscribe( String topic ) { // called while running
+
+	protected boolean subscribe( String topic ) { // called during runtime, not setup
 		if( state != GatewayState.STATE_ACTIVE )
 			return false;
-		//connection.subscribe();
+		//connection.subscribe(); // TODO
 		return false;
 	}
 
@@ -127,6 +180,7 @@ public class MqttGateway implements Gateway {
 	public void addReceiver(DeviceData devdata) {
 		String addr = devdata.getAddress();
 		List<DeviceData> subs;
+        System.out.println("addReceiver: "+addr);
 		
 		if( subscriptions.containsKey(addr) ) {
 			subs = subscriptions.get(addr);
@@ -141,6 +195,28 @@ public class MqttGateway implements Gateway {
 	public void sendData(DeviceData devdata) {
 		if( state != GatewayState.STATE_ACTIVE )
 			return; // TODO invalid state, error out?
-		// TODO //
+		byte[] payload = null;
+		switch( devdata.getType() ) {
+		case String:
+			payload = devdata.getStringValue().getBytes();
+			break;
+		case Value:
+			payload = devdata.getValue().toString().getBytes();
+			break;
+		case Toggle:
+			payload = devdata.getValue().toString().getBytes(); // TODO?
+			break;
+		case Event:
+			payload = "".getBytes(); // TODO non-empty messages
+			break;
+		}
+		connection.publish(devdata.getAddress(), payload, QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+            public void onSuccess(Void v) {
+                // the publish operation completed successfully.
+              }
+              public void onFailure(Throwable value) {
+                  //connection.disconnect(null); // publish failed.
+              }
+          });
 	}
 }

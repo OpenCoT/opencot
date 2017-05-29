@@ -20,6 +20,7 @@ package com.github.opencot;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.github.opencot.data.DataDirection;
 import com.github.opencot.data.DataType;
@@ -46,15 +47,22 @@ public class Main {
     	Device dev1 = new Device(1, "TestDev1", "Test1", mqtt);
     	Device dev2 = new Device(2, "TestDev2", "Test2", mqtt);
     	Device dev3 = new Device(3, "TestDev3", "Test3", mqtt);
-    	dev1.addDataEndpoint(new DeviceData(dev1, "Data1_val", DataType.Value, DataDirection.IN, "/test/1"));
-    	dev1.addDataEndpoint(new DeviceData(dev1, "Data2_str", DataType.String, DataDirection.IN, "/test/2"));
-    	dev2.addDataEndpoint(new DeviceData(dev2, "Data3_tgl", DataType.Toggle, DataDirection.IN, "/test/3"));
-    	dev3.addDataEndpoint(new DeviceData(dev3, "Data4_event", DataType.Event, DataDirection.IN, "/test/4"));
+    	dev1.addDataEndpoint(new DeviceData(dev1, "Data1_val", DataType.Value, DataDirection.IN, "test/1"));
+    	dev1.addDataEndpoint(new DeviceData(dev1, "Data2_str", DataType.String, DataDirection.IN, "test/2"));
+    	dev2.addDataEndpoint(new DeviceData(dev2, "Data3_tgl", DataType.Toggle, DataDirection.IN, "test/3"));
+    	dev3.addDataEndpoint(new DeviceData(dev3, "Data4_event", DataType.Event, DataDirection.IN, "test/4"));
     	devices.add(dev1);
     	devices.add(dev2);
     	devices.add(dev3);
 
-    	//mqtt.Start();
+    	mqtt.Start();
+    	while(true)
+    	try {
+			TimeUnit.SECONDS.sleep(5);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+    	//mqtt.Stop();
     }
     
 }

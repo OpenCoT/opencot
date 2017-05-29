@@ -9,6 +9,7 @@ public class DeviceData extends DataContainer {
 	
 	public DeviceData( DataExchanger parent, String name, DataType type, DataDirection direction, String addr) {
 		super(parent,name, type, direction);
+		address = addr;
 	}
 
 	public String getAddress() {
@@ -40,6 +41,7 @@ public class DeviceData extends DataContainer {
 		if (datatype == DataType.Event) {
 			eventCount++;
 			sendUpdates();
+            System.out.println("Device event: "+dataname);
 		}
 		else
 			throw new UnsupportedOperationException("Data is not event type");
