@@ -31,6 +31,7 @@ public class DeviceData extends DataContainer {
 			numvalue = newval;
 			//TODO if( datatype == DataType.Toggle ) toggled = newval>toggletreshold;
 			sendUpdates();
+			
 		}
 		else
 			throw new UnsupportedOperationException("Data is not value type");

@@ -3,6 +3,7 @@ package com.github.opencot;
 import java.util.List;
 
 import com.github.opencot.data.DataContainer;
+import com.github.opencot.data.DataDirection;
 import com.github.opencot.data.DataExchanger;
 import com.github.opencot.data.DeviceData;
 import com.github.opencot.io.Gateway;
@@ -13,7 +14,7 @@ public abstract class Scenario implements DataExchanger {
 	protected int uid;
 	protected String name;
 	protected String descr;
-	protected List<DeviceData> dataentries;
+	protected List<DataContainer> dataentries;
 
 	@Override
 	public boolean isExternal() {
@@ -31,5 +32,9 @@ public abstract class Scenario implements DataExchanger {
 				return dd;
 		}
 		return null;
+	}
+
+	public void addDataEndpoint(DataContainer dataendpoint) {
+		dataentries.add(dataendpoint);
 	}
 }

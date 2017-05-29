@@ -1,8 +1,10 @@
 package com.github.opencot.io.protocols;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 
 import org.fusesource.mqtt.client.MQTT;
@@ -43,7 +45,7 @@ public class MqttGateway implements Gateway {
             mqtt.setTracer(new Tracer(){
                 @Override
                 public void onReceive(MQTTFrame frame) {
-                    System.out.println("MQTT recv: "+frame);
+                    //System.out.println("MQTT recv: "+frame);
                 }
 
                 @Override
@@ -82,6 +84,7 @@ public class MqttGateway implements Gateway {
                 	List<DeviceData> subs = subscriptions.get(topic.toString());
 					Number numvalue = null;
                 	for (DataContainer dat : subs) {
+                		
 						switch (dat.getType()) {
 						case String:
 							dat.setStringValue(payload.toString());
@@ -89,15 +92,23 @@ public class MqttGateway implements Gateway {
 						case Value:
 						case Toggle:
 							if( numvalue == null ) {
+								String msgstr = null;
 								try {
-									numvalue = (Float.parseFloat(payload.toString()));
+									msgstr = new String(payload.toByteArray(), "UTF-8");
+								} catch (UnsupportedEncodingException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+								try {
+									numvalue = (Float.parseFloat(msgstr));
 								} catch (NumberFormatException nfe) {
 									// Not a float
 					                System.out.printf("MQTT: Invalid value received for \"%s\": \"%s\"\n",
-					                		topic.toString(), payload.toString());
+					                		topic.toString(), msgstr);
 					                continue;
 								}
 							}
+	                        System.out.println("aaa"+dat.getName());
 							dat.setValue(numvalue);
 							break;
 						case Event:

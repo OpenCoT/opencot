@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.github.opencot.data.DataContainer;
 import com.github.opencot.data.DataDirection;
 import com.github.opencot.data.DataType;
 import com.github.opencot.data.DeviceData;
@@ -55,6 +56,8 @@ public class Main {
     	devices.add(dev2);
     	devices.add(dev3);
     	Scenario scen1 = new OnOffScenario(1, "TestScenario1", "TestScen1 desc");
+    	scen1.addDataEndpoint(dev1.getDataEndpoint("Data1_val"));
+    	scen1.addDataEndpoint(dev1.getDataEndpoint("Data2_str"));
     	scenarios.add(scen1);
 
     	mqtt.Start();

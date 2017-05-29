@@ -79,4 +79,10 @@ public class Device implements DataExchanger {
 	public Gateway getGateway() {
 		return gateway;
 	}
+
+	@Override
+	public void NotifyDataChange(String dataname) {
+		//DataContainer changed = getDataEndpoint(dataname);
+		//changed.sendUpdates();
+	}
 }
