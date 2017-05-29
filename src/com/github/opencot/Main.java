@@ -54,6 +54,8 @@ public class Main {
     	devices.add(dev1);
     	devices.add(dev2);
     	devices.add(dev3);
+    	Scenario scen1 = new OnOffScenario(1, "TestScenario1", "TestScen1 desc");
+    	scenarios.add(scen1);
 
     	mqtt.Start();
     	while(true)

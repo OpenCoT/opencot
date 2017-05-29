@@ -18,4 +18,5 @@ public interface DataExchanger {
 	
 	public boolean isExternal();
 	public Gateway getGateway();
+	//public void NotifyDataChange( String dataname );
 }
